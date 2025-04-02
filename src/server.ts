@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from './db/connectdb.js';
 
 import driverRoutes from './routes/driver.route.js';
+import customerRoutes from './routes/customer.route.js';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/drivers', driverRoutes);
+app.use('/api/customers', customerRoutes);
 
 const PORT: string | number = process.env.PORT || 3000;
 

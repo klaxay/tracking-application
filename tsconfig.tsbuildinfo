@@ -1,1 +1,1 @@
-{"root":["./src/server.ts","./src/controllers/driver.controller.ts","./src/db/connectdb.ts","./src/models/driver.model.ts","./src/routes/driver.route.ts"],"version":"5.7.3"}
+{"root":["./src/server.ts","./src/controllers/customer.controller.ts","./src/controllers/driver.controller.ts","./src/db/connectdb.ts","./src/models/customer.model.ts","./src/models/driver.model.ts","./src/routes/customer.route.ts","./src/routes/driver.route.ts"],"version":"5.7.3"}
