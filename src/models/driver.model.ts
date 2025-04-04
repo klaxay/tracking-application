@@ -9,6 +9,7 @@ const driverSchema = new mongoose.Schema({
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
   },
+  online: { type: Boolean, default: true },
   updatedAt: { type: Date, default: Date.now },
 });
 

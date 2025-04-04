@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAvailableDrivers = exports.getDriverLocation = exports.updateDriverLocation = exports.registerDriver = void 0;
+exports.toggleDriverStatus = exports.getAvailableDrivers = exports.getDriverLocation = exports.updateDriverLocation = exports.registerDriver = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const driver_model_1 = __importDefault(require("../models/driver.model"));
 const axios_1 = __importDefault(require("axios"));
@@ -103,3 +103,24 @@ const getAvailableDrivers = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getAvailableDrivers = getAvailableDrivers;
+const toggleDriverStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { driverId } = req.params;
+    const { online } = req.body;
+    if (typeof online !== "boolean") {
+        res.status(400).json({ message: "Online status must be a boolean" });
+    }
+    try {
+        const driver = yield driver_model_1.default.findByIdAndUpdate(driverId, { online }, { new: true });
+        if (!driver) {
+            res.status(404).json({ message: "Driver not found" });
+        }
+        res.status(200).json({
+            message: `Driver status updated to ${online ? "online" : "offline"}`,
+            driver,
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error updating driver status", error });
+    }
+});
+exports.toggleDriverStatus = toggleDriverStatus;

@@ -5,34 +5,114 @@ import axios from "axios";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
-export const createOrder = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { customerId, pickupLocation, deliveryLocation } = req.body;
+const geocodeAddress = async (address: string) => {
+  const url = "https://maps.googleapis.com/maps/api/geocode/json";
+  const response = await axios.get(url, {
+    params: {
+      address,
+      key: process.env.GOOGLE_MAPS_API_KEY,
+    },
+  });
 
-    const driver = await Driver.findOne({ isAvailable: true });
-    if (!driver) {
-      res.status(400).json({ message: "No available drivers" });
-      return;
-    }
-
-    const order = new Order({
-      customerId,
-      driver: driver._id,
-      pickupLocation,
-      deliveryLocation,
-      currentLocation: { latitude: null, longitude: null },
-    });
-
-    driver.isAvailable = false;
-    await driver.save();
-    await order.save();
-
-    res.status(201).json({ message: "Order created successfully", order });
-  } catch (error) {
-    res.status(500).json({ message: "Error creating order", error: (error as Error).message });
+  const data = response.data;
+  if (data.status !== "OK" || data.results.length === 0) {
+    throw new Error("Failed to geocode address");
   }
+
+  const { lat, lng } = data.results[0].geometry.location;
+  return { latitude: lat, longitude: lng };
 };
 
+const calculateETAMinutes = async (origin: string, destination: string) => {
+  const url = "https://maps.googleapis.com/maps/api/distancematrix/json";
+  const response = await axios.get(url, {
+    params: {
+      origins: origin,
+      destinations: destination,
+      key: process.env.GOOGLE_MAPS_API_KEY,
+    },
+  });
+
+  const data = response.data;
+  const element = data.rows[0]?.elements[0];
+
+  if (
+    data.status !== "OK" ||
+    !element ||
+    element.status !== "OK"
+  ) {
+    throw new Error("Failed to calculate ETA");
+  }
+
+  const durationInSeconds = element.duration.value;
+  const eta = new Date(Date.now() + durationInSeconds * 1000); // convert seconds to milliseconds
+  return eta;
+};
+
+export const createOrder = async (req: Request, res: Response): Promise<Response | void> => {
+  try {
+    const {
+      customerId,
+      pickupAddress,
+      deliveryAddress,
+      pickupCoordinates,
+      deliveryCoordinates,
+    } = req.body;
+
+    if (!customerId) {
+      return res.status(400).json({ error: "Customer ID is required" });
+    }
+
+    // Determine coordinates
+    const pickup = pickupCoordinates || (pickupAddress ? await geocodeAddress(pickupAddress) : null);
+    const delivery = deliveryCoordinates || (deliveryAddress ? await geocodeAddress(deliveryAddress) : null);
+
+    if (!pickup || !delivery) {
+      return res.status(400).json({ error: "Pickup and delivery coordinates or addresses are required." });
+    }
+
+    // Assign a driver (enhance with filtering logic if needed)
+    const driver = await Driver.findOne({online:true, isAvailable:true})
+    if (!driver) {
+      return res.status(400).json({ error: "No driver available at the moment" });
+    }
+
+    // Set current location from driver
+    const currentLocation = driver.location;
+
+    // Calculate ETA
+    const origin = `${pickup.latitude},${pickup.longitude}`;
+    const destination = `${delivery.latitude},${delivery.longitude}`;
+    const eta = await calculateETAMinutes(origin, destination);
+
+    // Create order
+    const order = await Order.create({
+      customerId,
+      driver: driver._id,
+      pickupLocation: pickup,
+      deliveryLocation: delivery,
+      currentLocation,
+      eta,
+    });
+
+    // Update driver with current order (optional logic)
+    await Driver.findByIdAndUpdate(driver._id, {
+      currentOrder: order._id,
+    });
+
+    res.status(201).json({
+      message: "Order created successfully",
+      order,
+    });
+
+  } catch (error: any) {
+    console.error("Create Order Error:", error);
+    res.status(500).json({
+      message: "Error creating order",
+      error: error.message || "Internal Server Error",
+    });
+  }
+};
 export const getOrderById = async (req: Request, res: Response): Promise<void> => {
   try {
     const order = await Order.findById(req.params.orderId).populate("customerId driver");

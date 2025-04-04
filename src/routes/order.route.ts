@@ -8,7 +8,14 @@ import {
 
 const router = express.Router();
 
-router.post("/", createOrder); // Create order & auto-assign a driver
+router.post("/", async (req, res) => {
+  try {
+    const result = await createOrder(req, res); // Create order & auto-assign a driver
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create order" });
+  }
+});
 router.get("/:orderId", getOrderById); // Get order by ID
 router.put("/:orderId/status", updateOrderStatus); // Update order status
 router.get("/:orderId/track", trackOrder); // Track order location

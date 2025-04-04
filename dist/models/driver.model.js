@@ -13,6 +13,7 @@ const driverSchema = new mongoose_1.default.Schema({
         latitude: { type: Number, required: true },
         longitude: { type: Number, required: true },
     },
+    online: { type: Boolean, default: true },
     updatedAt: { type: Date, default: Date.now },
 });
 const Driver = mongoose_1.default.model("Driver", driverSchema);

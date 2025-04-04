@@ -1,8 +1,9 @@
 import { WebSocketServer } from 'ws';
 import Order from '../models/order.model';
+import Driver from '../models/driver.model';
 import axios from 'axios';
 
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 const wss = new WebSocketServer({ port: 8080 }); // WebSocket server on port 8080
 const drivers = new Map(); // Store driver connections
 
@@ -28,7 +29,9 @@ wss.on('connection', (ws, req) => {
     console.log('Driver connected');
 
     ws.on('message', async (message) => {
+        console.log('Received message:', message);
         try {
+
             const data = JSON.parse(message.toString());
             const { driverId, latitude, longitude } = data;
 
@@ -48,6 +51,19 @@ wss.on('connection', (ws, req) => {
                     order.eta = eta;
                     await order.save();
                 }
+                await Driver.findByIdAndUpdate(
+                    driverId,
+                    {
+                      $set: {
+                        location: {
+                          latitude,
+                          longitude,
+                        },
+                        updatedAt: new Date()
+                      }
+                    }
+                  ).then(()=>{console.log(`Driver ${driverId} location updated`)}).catch((err)=>{console.log(err)});
+                  
             }
 
             console.log(`Updated location & ETA for driver ${driverId}`);

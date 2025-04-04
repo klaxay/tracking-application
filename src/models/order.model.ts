@@ -16,7 +16,7 @@ const orderSchema = new mongoose.Schema(
       latitude: { type: Number, default: null },
       longitude: { type: Number, default: null },
     },
-    eta: { type: Date, default: null }, // Estimated Time of Arrival in minutes
+    eta: { type: Date, required: true }, // Estimated Time of Arrival in minutes
     status: {
       type: String,
       enum: ["assigned", "in transit", "delivered"],

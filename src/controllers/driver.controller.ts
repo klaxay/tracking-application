@@ -114,3 +114,31 @@ export const getAvailableDrivers = async (req: Request, res: Response): Promise<
     res.status(500).json({ message: "Error fetching available drivers", error: (error as Error).message });
   }
 };
+
+export const toggleDriverStatus = async (req: Request, res: Response): Promise<void> => {
+  const { driverId } = req.params;
+  const { online } = req.body;
+
+  if (typeof online !== "boolean") {
+    res.status(400).json({ message: "Online status must be a boolean" });
+  }
+
+  try {
+    const driver = await Driver.findByIdAndUpdate(
+      driverId,
+      { online },
+      { new: true }
+    );
+
+    if (!driver) {
+      res.status(404).json({ message: "Driver not found" });
+    }
+
+    res.status(200).json({
+      message: `Driver status updated to ${online ? "online" : "offline"}`,
+      driver,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating driver status", error });
+  }
+};

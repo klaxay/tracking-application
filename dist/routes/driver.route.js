@@ -10,4 +10,5 @@ router.post("/register", driver_controller_js_1.registerDriver);
 router.put("/:driverId/location", driver_controller_js_1.updateDriverLocation);
 router.get("/:driverId/location", driver_controller_js_1.getDriverLocation);
 router.get("/available", driver_controller_js_1.getAvailableDrivers);
+router.patch("/:driverId/online-status", driver_controller_js_1.toggleDriverStatus);
 exports.default = router;
