@@ -51,6 +51,15 @@ const calculateETAMinutes = async (origin: string, destination: string) => {
 
 export const createOrder = async (req: Request, res: Response): Promise<Response | void> => {
   try {
+
+
+    // Check whether an order already exists
+    const activeOrders = await Order.find({ status: { $ne: "delivered" } });
+    if(activeOrders){
+      return res.status(400).json({ error: "You already have an active order" });
+    }
+
+
     const {
       customerId,
       pickupAddress,
@@ -130,11 +139,26 @@ export const getOrderById = async (req: Request, res: Response): Promise<void> =
 export const updateOrderStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { status } = req.body;
+    // Before saving order status as "cancelled"
     const order = await Order.findById(req.params.orderId);
     if (!order) {
       res.status(404).json({ message: "Order not found" });
       return;
     }
+    if (status === "cancelled") {
+      const now = new Date();
+      const createdTime = order.createdAt.getTime();
+      const timeDiffInMinutes = (now.getTime() - createdTime) / (1000 * 60);
+
+      if (timeDiffInMinutes > 5) {
+        res.status(403).json({
+          message: "Orders can only be cancelled within 5 minutes of placement.",
+        });
+      }
+
+      order.cancelledAt = now; // Optional: Track when cancelled
+    }
+
 
     order.status = status;
     await order.save();

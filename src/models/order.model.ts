@@ -22,6 +22,10 @@ const orderSchema = new mongoose.Schema(
       enum: ["assigned", "in transit", "delivered"],
       default: "assigned",
     },
+    cancelledAt : {
+      type: Date, 
+      default: null
+    }
   },
   { timestamps: true } // Automatically adds createdAt & updatedAt fields
 );
