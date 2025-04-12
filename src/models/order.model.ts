@@ -19,7 +19,7 @@ const orderSchema = new mongoose.Schema(
     eta: { type: Date, required: true }, // Estimated Time of Arrival in minutes
     status: {
       type: String,
-      enum: ["assigned", "in transit", "delivered"],
+      enum: ["assigned", "in transit", "delivered", "cancelled"],
       default: "assigned",
     },
     cancelledAt : {

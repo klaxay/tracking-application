@@ -53,13 +53,8 @@ export const createOrder = async (req: Request, res: Response): Promise<Response
   try {
 
 
-    // Check whether an order already exists
-    const activeOrders = await Order.find({ status: { $ne: "delivered" } });
-    if(activeOrders){
-      return res.status(400).json({ error: "You already have an active order" });
-    }
-
-
+    
+    
     const {
       customerId,
       pickupAddress,
@@ -67,9 +62,14 @@ export const createOrder = async (req: Request, res: Response): Promise<Response
       pickupCoordinates,
       deliveryCoordinates,
     } = req.body;
-
+    
     if (!customerId) {
       return res.status(400).json({ error: "Customer ID is required" });
+    }
+    // Check whether an order already exists
+    const activeOrders = await Order.find({ status: { $ne: "delivered" } , customerId });
+    if(activeOrders){
+      return res.status(400).json({ error: "You already have an active order" });
     }
 
     // Determine coordinates
@@ -156,7 +156,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
         });
       }
 
-      order.cancelledAt = now; // Optional: Track when cancelled
+      order.cancelledAt = now; 
     }
 
 
