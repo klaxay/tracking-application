@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerCustomer = void 0;
+exports.getCustomerById = exports.getAllCustomers = exports.registerCustomer = void 0;
 const customer_model_1 = __importDefault(require("../models/customer.model"));
 const registerCustomer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -25,3 +25,27 @@ const registerCustomer = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.registerCustomer = registerCustomer;
+const getAllCustomers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const customers = yield customer_model_1.default.find();
+        res.status(200).json(customers);
+    }
+    catch (err) {
+        res.status(500).json({ message: "Error fetching customers", error: err.message });
+    }
+});
+exports.getAllCustomers = getAllCustomers;
+const getCustomerById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const customer = yield customer_model_1.default.findById(req.params.id);
+        if (!customer) {
+            res.status(404).json({ message: "Customer not found" });
+            return;
+        }
+        res.status(200).json(customer);
+    }
+    catch (err) {
+        res.status(500).json({ message: "Error fetching customer", error: err.message });
+    }
+});
+exports.getCustomerById = getCustomerById;

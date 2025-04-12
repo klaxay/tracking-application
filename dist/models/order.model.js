@@ -22,9 +22,13 @@ const orderSchema = new mongoose_1.default.Schema({
     eta: { type: Date, required: true }, // Estimated Time of Arrival in minutes
     status: {
         type: String,
-        enum: ["assigned", "in transit", "delivered"],
+        enum: ["assigned", "in transit", "delivered", "cancelled"],
         default: "assigned",
     },
+    cancelledAt: {
+        type: Date,
+        default: null
+    }
 }, { timestamps: true } // Automatically adds createdAt & updatedAt fields
 );
 const Order = mongoose_1.default.model("Order", orderSchema);

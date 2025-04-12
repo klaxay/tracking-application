@@ -59,6 +59,11 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!customerId) {
             return res.status(400).json({ error: "Customer ID is required" });
         }
+        // Check whether an order already exists
+        const activeOrders = yield order_model_1.default.find({ customerId, status: { $ne: "delivered" } });
+        if (activeOrders.length > 0) {
+            return res.status(400).json({ error: "You already have an active order" });
+        }
         // Determine coordinates
         const pickup = pickupCoordinates || (pickupAddress ? yield geocodeAddress(pickupAddress) : null);
         const delivery = deliveryCoordinates || (deliveryAddress ? yield geocodeAddress(deliveryAddress) : null);
@@ -120,10 +125,22 @@ exports.getOrderById = getOrderById;
 const updateOrderStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { status } = req.body;
+        // Before saving order status as "cancelled"
         const order = yield order_model_1.default.findById(req.params.orderId);
         if (!order) {
             res.status(404).json({ message: "Order not found" });
             return;
+        }
+        if (status === "cancelled") {
+            const now = new Date();
+            const createdTime = order.createdAt.getTime();
+            const timeDiffInMinutes = (now.getTime() - createdTime) / (1000 * 60);
+            if (timeDiffInMinutes > 5) {
+                res.status(403).json({
+                    message: "Orders can only be cancelled within 5 minutes of placement.",
+                });
+            }
+            order.cancelledAt = now;
         }
         order.status = status;
         yield order.save();

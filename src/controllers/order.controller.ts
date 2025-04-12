@@ -51,10 +51,6 @@ const calculateETAMinutes = async (origin: string, destination: string) => {
 
 export const createOrder = async (req: Request, res: Response): Promise<Response | void> => {
   try {
-
-
-    
-    
     const {
       customerId,
       pickupAddress,
@@ -67,8 +63,8 @@ export const createOrder = async (req: Request, res: Response): Promise<Response
       return res.status(400).json({ error: "Customer ID is required" });
     }
     // Check whether an order already exists
-    const activeOrders = await Order.find({ status: { $ne: "delivered" } , customerId });
-    if(activeOrders){
+    const activeOrders = await Order.find({customerId,  status: { $ne: "delivered" } });
+    if(activeOrders.length > 0) {
       return res.status(400).json({ error: "You already have an active order" });
     }
 
